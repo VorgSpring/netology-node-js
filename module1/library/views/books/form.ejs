@@ -1,0 +1,64 @@
+<form method="POST" class="mt-5">
+    <div class="form-group">
+        <label for="inputTitle">Title</label>
+        <input type="text"
+               value="<%= book.title %>"
+               name="title"
+               class="form-control"
+               id="inputTitle">
+    </div>
+
+    <div class="form-group">
+        <label for="inputDesc">Description</label>
+        <textarea
+                rows="3"
+                name="desc"
+                class="form-control"
+                id="inputDesc"
+        ><%= book.description %></textarea>
+    </div>
+
+    <div class="form-group">
+        <label for="authors">Authors</label>
+        <textarea
+                rows="3"
+                name="desc"
+                class="form-control"
+                id="authors"
+        ><%= book.authors %></textarea>
+    </div>
+
+    <div class="form-group">
+        <label for="favorite">Favorite</label>
+        <textarea
+                rows="3"
+                name="desc"
+                class="form-control"
+                id="favorite"
+        ><%= book.favorite %></textarea>
+    </div>
+
+    <div class="form-group">
+        <label for="fileCover">File Cover</label>
+        <textarea
+                rows="3"
+                name="desc"
+                class="form-control"
+                id="fileCover"
+        ><%= book.fileCover %></textarea>
+    </div>
+
+    <div class="form-group">
+        <label for="fileName">File Name</label>
+        <textarea
+                rows="3"
+                name="desc"
+                class="form-control"
+                id="fileName"
+        ><%= book.fileName %></textarea>
+    </div>
+
+    <div class="form-group text-right ">
+        <button type="submit" class="btn btn-primary">Save</button>
+    </div>
+</form>
