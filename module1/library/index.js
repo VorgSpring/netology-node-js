@@ -11,6 +11,8 @@ const userApiRouter = require('./routes/api/user');
 
 const booksRouter = require('./routes/books');
 
+const counterRouter = require('./routes/counter');
+
 const app = express();
 
 app.use(bodyParser.json());
@@ -24,6 +26,7 @@ app.use('/public', express.static(__dirname + "/public"));
 
 app.use('/', indexRouter);
 app.use('/books', booksRouter);
+app.use('/counter', counterRouter);
 app.use('/api/books', booksApiRouter);
 app.use('/api/user', userApiRouter);
 
