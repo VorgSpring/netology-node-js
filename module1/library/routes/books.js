@@ -2,24 +2,8 @@ const express = require('express');
 const router = express.Router();
 const {Book} = require('../models');
 
-const stor = {
-    books: [],
-};
-
-[1, 2, 3].map(el => {
-    const newBook = new Book(
-        `book ${el}`,
-        `description book ${el}`,
-        `authors book ${el}`,
-        `favorite book ${el}`,
-        `fileCover book ${el}`,
-        `fileName book ${el}`
-    );
-    stor.books.push(newBook);
-});
-
-router.get('/', (req, res) => {
-    const {books} = stor;
+router.get('/', async (req, res) => {
+    const books = await Book.find();
     res.render("books/index", {
         title: "Books",
         books: books,
@@ -33,8 +17,7 @@ router.get('/create', (req, res) => {
     });
 });
 
-router.post('/create', (req, res) => {
-    const {books} = stor;
+router.post('/create', async (req, res) => {
     const {
         title, 
         description,
@@ -44,7 +27,7 @@ router.post('/create', (req, res) => {
         fileName
     } = req.body;
 
-    const newbooks = new Book(
+    const newBook = new Book(
         title, 
         description,
         authors,
@@ -52,42 +35,51 @@ router.post('/create', (req, res) => {
         fileCover,
         fileName,
     );
-    books.push(newbooks);
 
-    res.redirect('/books')
-});
-
-router.get('/:id', (req, res) => {
-    const {books} = stor;
-    const {id} = req.params;
-    const idx = books.findIndex(el => el.id === id);
-
-    if (idx !== -1) {
-        res.render("books/view", {
-            title: "Books | view",
-            book: books[idx],
-        });
-    } else {
-        res.status(404).redirect('/404');
+    try {
+        await newBook.save();
+        res.redirect('/books')
+    } catch (e) {
+        console.error(e);
+        res.status(500).json();
     }
 });
 
-router.get('/update/:id', (req, res) => {
-    const {books} = stor;
+router.get('/:id', async (req, res) => {
     const {id} = req.params;
-    const idx = books.findIndex(el => el.id === id);
+    let book;
 
-    if (idx !== -1) {
-        res.render("books/update", {
-            title: "Books | view",
-            book: books[idx],
-        });
-    } else {
+    try {
+        book = await Book.findById(id);
+    } catch (e) {
+        console.error(e);
         res.status(404).redirect('/404');
     }
+
+    res.render("books/view", {
+        title: "Books | view",
+        book
+    });
 });
 
-router.post('/update/:id', (req, res) => {
+router.get('/update/:id', async (req, res) => {
+    const {id} = req.params;
+    let book;
+
+    try {
+        book = await Book.findById(id);
+    } catch (e) {
+        console.error(e);
+        res.status(404).redirect('/404');
+    }
+
+    res.render("books/update", {
+        title: "Books | view",
+        book,
+    });
+});
+
+router.post('/update/:id', async (req, res) => {
     const {books} = stor;
     const {id} = req.params;
     const {
@@ -99,35 +91,34 @@ router.post('/update/:id', (req, res) => {
         fileName
     } = req.body;
 
-    const idx = books.findIndex(el => el.id === id);
-
-    if (idx !== -1) {
-        books[idx] = {
-            ...books[idx],
+    try {
+        await Book.findByIdAndUpdate(id, {
             title, 
             description,
             authors,
             favorite,
             fileCover,
-            fileName,
-        };
-        res.redirect(`/books/${id}`);
-    } else {
+            fileName
+        });
+    } catch (e) {
+        console.error(e);
         res.status(404).redirect('/404');
     }
+
+    res.redirect(`/books/${id}`);
 });
 
-router.post('/delete/:id', (req, res) => {
-    const {books} = stor;
+router.post('/delete/:id',async  (req, res) => {
     const {id} = req.params;
-    const idx = books.findIndex(el => el.id === id);
 
-    if (idx !== -1) {
-        books.splice(idx, 1);
-        res.redirect(`/books`);
-    } else {
+    try {
+        await Book.deleteOne({_id: id});
+    } catch (e) {
+        console.error(e);
         res.status(404).redirect('/404');
     }
+
+    res.redirect(`/books`);
 });
 
 module.exports = router;
