@@ -4,42 +4,24 @@ const router = express.Router();
 
 const {Book} = require('../../models');
 
-const stor = {
-    books: [],
-};
-
-[1, 2, 3].map(el => {
-    const newBook = new Book(
-        `book ${el}`,
-        `description book ${el}`,
-        `authors book ${el}`,
-        `favorite book ${el}`,
-        `fileCover book ${el}`,
-        `fileName book ${el}`
-    );
-    stor.books.push(newBook);
-});
-
-router.get('/', (req, res) => {
-    const {books} = stor;
+router.get('/', async (req, res) => {
+    const books = await Book.find().select('-__v');
     res.json(books);
 });
 
-router.get('/:id', (req, res) => {
-    const {books} = stor;
+router.get('/:id', async (req, res) => {
     const {id} = req.params;
-    const idx = books.findIndex(el => el.id === id);
 
-    if (idx !== -1) {
-        res.json(books[idx]);
-    } else {
-        res.status(404);
-        res.json('book | not found');
+    try {
+        const book = await Book.findById(id).select('-__v');
+        res.json(book);
+    } catch (e) {
+        console.error(e);
+        res.status(404).json("book | not found");
     }
 });
 
-router.post('/', fileMiddleware.single('book'), (req, res) => {
-    const {books} = stor;
+router.post('/', fileMiddleware.single('book'), async (req, res) => {
     const {
         title, 
         description,
@@ -48,8 +30,6 @@ router.post('/', fileMiddleware.single('book'), (req, res) => {
         fileCover,
         fileName
     } = req.body;
-
-    const {path} = req.file;
 
     const newBook = new Book(
         title, 
@@ -58,16 +38,18 @@ router.post('/', fileMiddleware.single('book'), (req, res) => {
         favorite,
         fileCover,
         fileName,
-        path
     );
-    books.push(newBook);
 
-    res.status(201);
-    res.json(newBook);
+    try {
+        await newBook.save();
+        res.json(newBook);
+    } catch (e) {
+        console.error(e);
+        res.status(500).json();
+    }
 });
 
-router.put('/:id', (req, res) => {
-    const {books} = stor;
+router.put('/:id', async (req, res) => {
     const {
         title, 
         description,
@@ -77,58 +59,52 @@ router.put('/:id', (req, res) => {
         fileName
     } = req.body;
 
-    const {path} = req.file;
-
     const {id} = req.params;
-    const idx = books.findIndex(el => el.id === id);
 
-    if (idx !== -1) {
-        books[idx] = {
-            ...books[idx],
+    try {
+        await Book.findByIdAndUpdate(id, {
             title, 
             description,
             authors,
             favorite,
             fileCover,
-            fileName,
-            fileBook: path
-        };
-        res.json(books[idx]);
-    } else {
-        res.status(404);
-        res.json('book | not found');
-    }
-});
-
-router.delete('/:id', (req, res) => {
-    const {books} = stor;
-    const {id} = req.params;
-    const idx = books.findIndex(el => el.id === id);
-
-    if (idx !== -1) {
-        books.splice(idx, 1);
-        res.json(true);
-    } else {
-        res.status(404);
-        res.json('book | not found');
-    }
-});
-
-router.get('/:id/download', (req, res) => {
-    const {books} = stor;
-    const {id} = req.params;
-    const idx = books.findIndex(el => el.id === id);
-
-    if (idx !== -1) {
-        res.download(books[idx].fileBook, 'book.pdf', err => {
-            if (err){
-                res.status(404).json();
-            }
+            fileName
         });
-    } else {
-        res.status(404);
-        res.json('book | not found');
+        res.redirect(`/api/book/${id}`);
+    } catch (e) {
+        console.error(e);
+        res.status(500).json();
     }
 });
+
+router.delete('/:id', async (req, res) => {
+    const {id} = req.params;
+
+    try {
+        await Book.deleteOne({_id: id});
+        res.json(true);
+    } catch (e) {
+        console.error(e);
+        res.status(500).json();
+    }
+});
+
+// TODO переписать
+// router.get('/:id/download', (req, res) => {
+//     const {books} = stor;
+//     const {id} = req.params;
+//     const idx = books.findIndex(el => el.id === id);
+
+//     if (idx !== -1) {
+//         res.download(books[idx].fileBook, 'book.pdf', err => {
+//             if (err){
+//                 res.status(404).json();
+//             }
+//         });
+//     } else {
+//         res.status(404);
+//         res.json('book | not found');
+//     }
+// });
 
 module.exports = router;
